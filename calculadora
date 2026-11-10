@@ -1,1 +1,96 @@
+type CallbackBono = (antiguedad: number) => number;
 
+interface Empleado {
+    nombre: string;
+    salarioBase: number;
+    horasExtra: number[];
+    antiguedad: number;
+    descuento?: number; 
+}
+
+
+const empleados: Empleado[] = [
+    {
+        nombre: "Ana",
+        salarioBase: 450.00,
+        horasExtra: [5, 2],
+        antiguedad: 4,
+        descuento: 46.16
+    },
+    {
+        nombre: "Luis",
+        salarioBase: 550.00,
+        horasExtra: [], 
+        antiguedad: 1,
+        descuento: 56.38
+    },
+    {
+        nombre: "Marta",
+        salarioBase: 480.00,
+        horasExtra: [2], 
+        antiguedad: 5,
+        descuento: 49.20
+    }
+];
+
+const calcularHorasExtra = (tarifa: number = 4.00, ...registros: number[]): number => {
+    if (registros.length === 0) return 0;
+    const totalHoras = registros.reduce((acumulador, horas) => acumulador + horas, 0);
+    return totalHoras * tarifa;
+};
+
+
+const calcularSalarioBruto = (salarioBase: number, pagoHorasExtra: number): number => {
+    return salarioBase + pagoHorasExtra;
+};
+
+const calcularBonoSegunAntiguedad: CallbackBono = (antiguedad: number): number => {
+    return antiguedad >= 3 ? 20.00 : 0.00;
+};
+
+const obtenerBono = (antiguedad: number, callback: CallbackBono): number => {
+    return callback(antiguedad);
+};
+
+const calcularSalarioNeto = (salarioBruto: number, bono: number, descuento?: number): number => {
+    const descuentoAplicado = descuento !== undefined ? descuento : 0;
+    return (salarioBruto + bono) - descuentoAplicado;
+};
+
+const calcularTotalNominaRecursivo = (salarios: number[]): number => {
+    // Caso base: si el arreglo está vacío, el total acumulado es 0
+    if (salarios.length === 0) {
+        return 0;
+    }
+    return salarios[0] + calcularTotalNominaRecursivo(salarios.slice(1));
+};
+
+console.log("=== CALCULADORA DE NÓMINA RECURSIVA ===");
+const salariosNetos: number[] = [];
+
+empleados.forEach(emp => {
+    const pagoHE = calcularHorasExtra(4.00, ...emp.horasExtra);
+    const salarioBruto = calcularSalarioBruto(emp.salarioBase, pagoHE);
+    const bono = obtenerBono(emp.antiguedad, calcularBonoSegunAntiguedad);
+    const salarioNeto = calcularSalarioNeto(salarioBruto, bono, emp.descuento);
+    
+    salariosNetos.push(salarioNeto);
+    
+    console.log(`Empleado: ${emp.nombre} | Salario Neto: $${salarioNeto.toFixed(2)}`);
+});
+
+const totalNomina = calcularTotalNominaRecursivo(salariosNetos);
+console.log("----------------------------------------");
+console.log(`Total de la Nómina: $${totalNomina.toFixed(2)}`);
+
+
+console.log("\n=== COMPROBACIONES TÉCNICAS ===");
+
+const pruebaSinHE = calcularHorasExtra(4.00);
+console.log(`1. Comprobación sin horas extra (Luis): $${pruebaSinHE.toFixed(2)} (Esperado: $0.00)`);
+
+const pruebaSinDescuento = calcularSalarioNeto(500.00, 20.00); 
+console.log(`2. Comprobación sin descuento ($500 bruto + $20 bono): $${pruebaSinDescuento.toFixed(2)} (Esperado: $520.00)`);
+
+const pruebaArregloVacio = calcularTotalNominaRecursivo([]);
+console.log(`3. Comprobación arreglo vacío: $${pruebaArregloVacio.toFixed(2)} (Esperado: $0.00)`);
